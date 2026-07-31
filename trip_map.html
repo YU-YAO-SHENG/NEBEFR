@@ -87,7 +87,7 @@
 <body>
 
 <header>
-  <h1>Trip Map — Amsterdam → Utrecht → Ghent → Antwerp/Brussels → Bruges → Lille</h1>
+  <h1>Trip Map — Amsterdam → Utrecht → Ghent → Antwerp/Brussels → Bruges → Lille → The Hague → Kinderdijk/Rotterdam</h1>
   <p class="subtitle">Select a city, then a day if there's more than one</p>
 </header>
 
@@ -192,6 +192,29 @@ const cities = {
       { name: "La Vieille Bourse", lat: 50.6370175, lng: 3.0642923, note: "Sunday book & flower market in courtyard", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAf1PZJ8ntj1TkExPpZFzkdoWql8NmiMvhYNG9lkYKIGl_qzX3Eel9k4Pa2GOVdelhRxEs7tjOCmmjH6vfjgmJuDJIQ8HzpscChCtZTOzCMHG0ZUwyscjTjOAsIajSf3YYr0k9zJn-YBwyeibg=s800-w800-h600" },
       { name: "Place du Général de Gaulle", lat: 50.6370193, lng: 3.0636696, note: "Grand Place", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBmkF-Qe90l91P_YsgtdMiQphNRR4_v5tbmJOHhh0SOHjvJ8moDRczxz495ASFU45trIQdSC1clXfnXwIP1wAVRjDZQ95g-Bm9hR1p7QvEtTl3QPcZbX4zZBqhhKPe_jqK9k2cbrHMwM8AXZg=s800-w800-h600" },
       { name: "Pulpe", lat: 50.6431525, lng: 3.0594134, note: "Michelin-recognized bistro — book ahead, closed Mon-Wed", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCZE9yWV7Q4ruPsvKh_3BV-mkqyp3tIJyaVEgCMjxhOjndNAG6UjyN7Nl1hzKusL1VvfT0AAN8NVh-1tdbSACly-uJZ1_UeMjsm54MBE0euWqSRpo5hj5FivQCmJg_CFgMv787QwZGh5tP3JUtl8LR9GA=s800-w800-h600" }
+    ]}}
+  },
+  hague: {
+    label: "The Hague", color: "#4a7c8c",
+    days: {
+      d1: { label: "Day 1 — City Center", stops: [
+        { name: "The Passage", lat: 52.0780851, lng: 4.3114304, note: "Historic covered shopping arcade", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjA255rnyjJdqU8SvCgJwkPHvwrbYTGjtAV-bP7EvP-0sqbQMEQFvlBJuvfJSM-zlLuMVYd_VXIcnVVqqbOLFIfPW8uQxh1bKMrpN2w1J3rJi0n4hVnv65-Boh62MRfYz6Mvgq_CCLT13a_8=s800-w800-h600" },
+        { name: "Binnenhof", lat: 52.0795985, lng: 4.313273, note: "Dutch Parliament, Ridderzaal, Hofvijver lake", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAgWJ4Pbmd0usgxh1rMPn_OhiMa3AWO0AmCRBMqu1uC1XNtnEFBQ8oYRuPJsosdg9n_hXzEC0ueTPXPvuUwTSTg0TEZikoxB2DAGiqOKrMLFaGyFdB6zfNO9qU73iXaBZHVC2X3WZlS5faLfg=s800-w800-h600" },
+        { name: "Mauritshuis", lat: 52.0804322, lng: 4.3143148, note: "Vermeer's Girl with a Pearl Earring", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAs2noXzKXN14ikvJVUSktDjCCNl2KH8w8bYg2QJNhKUcAePsv4TTi1tG0lvcXX1Af_XMOyayubNubMY_QD1Sxrg3ZSEJkOa19Gy1bsP9OB-pk7H8CgFOS_Wcasd1t2ZxqofB3552PCEI1yqg=s800-w800-h600" },
+        { name: "Prison Gate Museum (Gevangenpoort)", lat: 52.079653, lng: 4.310319, note: "Medieval prison, audio guide included", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBB8JH5eMrmvbeSWLpehIySO95lJVRK20_0c1V7zQlXquQe0K2vDsC5keh9oVgIMf4AgGNjrLiemnSVjUu54h-_VQIcHsV_FHL9MHjSyavP19sXQEU-Bpx6Dc16fKM-F_Cvaxk59Ep8iILXNw=s800-w800-h600" }
+      ]},
+      d2: { label: "Day 2 — Beach & Market", stops: [
+        { name: "Scheveningen Pier", lat: 52.115777, lng: 4.2827143, note: "Beach, boardwalk, North Sea views", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAjEUvUDXUub4GCf-dvP9AfSv39PbB8NiieBi7VmoOnzcP_0Iufogug2eEXfg1PmwEZVqKtygOxqXw5OQKpnzuZie_zDMkmd-k0BjFHEN8tdzM57Bluk_trP_aBDDpywzmPMLLskAYiSkLg0Fo=s800-w800-h600" },
+        { name: "Lange Voorhout Antiques Market", lat: 52.083256, lng: 4.3140016, note: "Thursdays & Sundays only — check it lands on your date", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBz0b_wF78eJui9wT0wCDkMoeOVcfEzlfhmuYQx1pNAqVe3Ef29nDKo68_4ZtuM4H-UztM7qV5mJF7BTvpUNOyjkuZy4FmsOQYlsoaFZV6kYRwGV3wk902tkMzvxwl3aX4L9pLhSwuZGrQ6Hw=s800-w800-h600" }
+      ]}
+    }
+  },
+  rotterdam: {
+    label: "Kinderdijk + Rotterdam", color: "#d68c45",
+    days: { main: { label: "Windmills & Modern Rotterdam", stops: [
+      { name: "Kinderdijk", lat: 51.8877407, lng: 4.6380074, note: "UNESCO windmills, waterbus from Rotterdam ~30 min", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCXTZHQgdonHOu7RNnlEOXBtx-YHidUoEIZuKbEM6WCmuC2xKJmAQULDxuGMfB99ya2FKOPoHKVEMUZalHgg_ww6F6i58N6rZ9C7iF_i1s9gOiboLcVF5LndPwbYOvrh4VVst4ec4DwZA4h6w=s800-w800-h600" },
+        { name: "Cube Houses", lat: 51.9201875, lng: 4.4905747, note: "Piet Blom's tilted houses, walk-through museum house", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDjZr7ytksXShLfCI9w1GwVm8j7_OeYljHuCUjxvxkJdU9b8hS1htLrm-wUpQqGffZrhLTJKz6P94thuYjtYDxXV9WCFqvP9DnphfkIbPWt0soF-Le-6PGa2kVHV0oe1zOfJcbWYJfPoOCTsL8=s800-w800-h600" },
+        { name: "Markthal", lat: 51.9199799, lng: 4.4869831, note: "Covered market hall, right next to Cube Houses", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBwEugdP8JmwtQ9UZ3hH6muAIHzgfft6JKXS4qChgOhnA7q_rZMRb-AhfHQqyTFCCwkL5yvrQwMFTGG8NLuHjfyYkAxGh6B3Yg-PQIGJDROUYPBU9ZLfuVnQk1Vkxyz0cSrH2BqP6j2qh-1Sg=s800-w800-h600" }
     ]}}
   }
 };
