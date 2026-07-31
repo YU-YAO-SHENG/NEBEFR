@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trip Itinerary Map — Amsterdam to Lille</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --ink: #2b2b2b;
+    --muted: #6b6b6b;
+    --card: #ffffff;
+    --border: #e6e0d8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header { padding: 16px 20px 10px; border-bottom: 1px solid var(--border); background: var(--card); }
+  h1 { margin: 0 0 4px; font-size: 1.2rem; font-weight: 700; }
+  .subtitle { margin: 0; color: var(--muted); font-size: 0.85rem; }
+
+  .city-tabs, .day-tabs {
+    display: flex; gap: 6px; padding: 10px 20px; background: var(--card); flex-wrap: wrap;
+  }
+  .city-tabs { border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 500; }
+  .day-tabs { border-bottom: 1px solid var(--border); padding-top: 6px; }
+
+  .tab {
+    padding: 7px 14px; border-radius: 18px; border: 2px solid var(--border);
+    background: var(--bg); cursor: pointer; font-size: 0.83rem; font-weight: 600;
+    color: var(--muted); transition: all 0.15s ease; user-select: none; white-space: nowrap;
+  }
+  .tab:hover { border-color: var(--muted); }
+  .tab.active { color: white; }
+
+  #map { width: 100%; height: 52vh; min-height: 380px; }
+
+  .photo-pin { position: relative; width: 50px; height: 50px; }
+  .photo-pin .pin-photo {
+    width: 50px; height: 50px; border-radius: 50%; background-size: cover;
+    background-position: center; border: 3px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+  }
+  .photo-pin .pin-badge {
+    position: absolute; top: -5px; right: -5px; width: 20px; height: 20px; border-radius: 50%;
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 800; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .leaflet-popup-content-wrapper { border-radius: 12px; }
+  .popup-photo { width: 100%; height: 110px; object-fit: cover; border-radius: 8px 8px 0 0; display: block; }
+  .popup-body { padding: 8px 2px 2px; }
+  .popup-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 3px; }
+  .popup-note { color: var(--muted); font-size: 0.8rem; margin-bottom: 5px; }
+  .popup-link { font-size: 0.76rem; color: #4a6fa5; text-decoration: none; }
+
+  #stoplist { padding: 16px 20px 40px; }
+  .day-title { font-size: 1rem; font-weight: 700; margin-bottom: 10px; padding-left: 10px; border-left: 5px solid; }
+  .stop-card {
+    display: flex; gap: 12px; align-items: center; background: var(--card);
+    border: 1px solid var(--border); border-radius: 12px; padding: 10px; margin-bottom: 8px;
+    cursor: pointer; transition: box-shadow 0.15s ease;
+  }
+  .stop-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+  .stop-thumb {
+    flex-shrink: 0; width: 56px; height: 56px; border-radius: 10px;
+    background-size: cover; background-position: center; position: relative;
+  }
+  .stop-num {
+    position: absolute; top: -6px; left: -6px; width: 20px; height: 20px; border-radius: 50%;
+    color: white; display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 800; border: 2px solid white;
+  }
+  .stop-info { flex: 1; }
+  .stop-name { font-weight: 700; font-size: 0.9rem; }
+  .stop-note { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+  .stop-link { font-size: 0.76rem; color: #4a6fa5; text-decoration: none; margin-top: 4px; display: inline-block; }
+
+  footer { text-align: center; padding: 14px; font-size: 0.75rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Trip Map — Amsterdam → Utrecht → Ghent → Antwerp/Brussels → Bruges → Lille</h1>
+  <p class="subtitle">Select a city, then a day if there's more than one</p>
+</header>
+
+<div class="city-tabs" id="cityTabs"></div>
+<div class="day-tabs" id="dayTabs"></div>
+<div id="map"></div>
+<div id="stoplist"></div>
+<footer>Tap a pin or a card to see details · Built for your trip</footer>
+
+<script>
+const cities = {
+  amsterdam: {
+    label: "Amsterdam", color: "#e07a5f",
+    days: {
+      d1: { label: "Day 1 — Old Center", stops: [
+        { name: "De Wallen (Red Light District)", lat: 52.3718122, lng: 4.8960596, note: "Start here, before the day heats up", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjACEbwvaEWSp3_Ufqx6E2IRoouuaHov2X9h0Ps3STu4Zx6WPlxWgYC-7BeLcgnpCJVU5MyM4kgf5Yt2CNprLVv6w3c4DYLrGjYomGwOpRMx_2eK0tr2QKoef63cFnn-sgXhsNjoNs6dMfeyyIE=s800-w800-h600" },
+        { name: "Oude Kerk", lat: 52.3744177, lng: 4.8981763, note: "Amsterdam's oldest building", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDPjgDaN0-QkCW241_pMLa-iAjiyYYB5LlvaF_f24GwTkl9Lg8hvcmePjVt6_HPadIM4SXonDtzQyIPHq0S__RMbwo5Ha9FktmNHTWOiMmUJl_VbtsyrWTajuH23S40gHzB4122s0usRAN3rKk=s800-w800-h600" },
+        { name: "Nieuwmarkt", lat: 52.3725898, lng: 4.8998645, note: "Square with the Waag building", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBGd2KfE_WicWjCqeQ3BzREOajtHbPy0r0dJ4f_-lNZfiFccdYHgSpeNanvwyMeUAAk-ueADXX4B0G0j8itQTmoQRvf0UPFGc79CIyvWz4plL8v1JXRVKOL1aVUbfNiIZmBKhnj-iBQO01sTg=s800-w800-h600" },
+        { name: "Dam Square & Royal Palace", lat: 52.3731835, lng: 4.8913758, note: "Palace + De Nieuwe Kerk right here", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBeWVWwCa-3v5gDTUq2cf0wKSyGTYeJuzgNgPe65pzf9Dece7B3YdcZMI60KWYIC2WZmIGIfxXm4KxiQo09poiKV7m7Vo4-AQ6Htkjmruuwk6_wd8jZiypuRD_zbihG46SDkEsiMM4vNCfnJHs=s800-w800-h600" },
+        { name: "Bloemenmarkt (Flower Market)", lat: 52.36676, lng: 4.892949, note: "Floating flower market", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDubnVArxk2OFrAM-EyS_QkKQjT93iSBYmi6ZVx8cwdbY2iiG9UVYkbd2gRiegHiX35Bc1cl26ubCMaV9qdN4au7VyUSKD3hjUsxjJM2T9Aw50TebRspPA0hTfTdnkjs5DV_w5EUPEyTE2T=s800-w800-h600" },
+        { name: "Vlaams Friteshuis Vleminckx", lat: 52.3678913, lng: 4.8909863, note: "Fries stop", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjB5fJ_lQ70Ji2mE1sw6iEIwsO3P8uJUJcjCH6vsK77SvWEtHfDwdHZgz4idkArVHp9diBaL1rMQNnOVsuds4SZbALsFNwTLac6rsgAQGz8i7g06AJkeKyM4krkpnkLdYzS1Eq3E-WOd6mkrWVk=s800-w800-h600" }
+      ]},
+      d2: { label: "Day 2 — Jordaan & Rijksmuseum", stops: [
+        { name: "The Papeneiland", lat: 52.3804627, lng: 4.8879704, note: "Famous apple pie, canal-side", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAjkdQImKLKpSDRlG2aruOuXq2A5JhRaGADQUiQgdGhYhotgeHrzEyYcW_VzL30k5kgyyguhh5jMOGnU06MfNw1u6hC1DDP_nI_FaJbcQJfw08keoVGvRW8vyj0yKiye4E4wOxT3lVze6VhXwu0tmkR=s800-w800-h600" },
+        { name: "Jordaan neighborhood", lat: 52.3732456, lng: 4.8802412, note: "Wander, boutiques, cafes", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCptSi2VeVsBFcqerX5iar1PgpR1HTTiNTFTKeSPw_58CmXTEVQB1dtkHkwq-bX50QUghD7_nT-I53-iajfqFYVg8_EcidxhIu8VrvCkJc9_a5M7WnlTa2rEgt9s1UlH4N3uBEf8hqBX40ONiw=s800-w800-h600" },
+        { name: "The 9 Streets", lat: 52.3701969, lng: 4.8860511, note: "Shopping cluster", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjC5P5yEe7eCKibdV2qPPuF3MwgFyLLcE_kDUpfaDueWEC17nyqtfiNhezCOj6Blao1y5QpHOFF_tGOs5Y8-GLa6NxTrnCbxcaef42v2RHOgWQ3JUcK2E7Sk0wW8dgznY0P5kUTF19BNmDva=s800-w800-h600" },
+        { name: "Rijksmuseum", lat: 52.3599976, lng: 4.8852188, note: "The Night Watch, Vermeer's Milkmaid", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjA1haWT_mTi-vx4jBo5Im7pfHN7OAq5dAeS_U7ZcmNBf_TQ0E3iU1dNpT_XWLkJg6mOhVTb6I5nX9nbcgmECt7pr029LVuXqzKwpOewcWmybwoulLPi8QNwqXMKZbWhY5oDlKd8TIW6XAAPPiQ3alyvaQ=s800-w735-h600" },
+        { name: "Moco Museum", lat: 52.3587389, lng: 4.8819074, note: "Banksy, modern art — 2 min walk from Rijksmuseum", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCNZOIu5SvY4QP40kJk4B8vVcpUYXH1Y-u66_MRogUJ672asGBpql5HHM8Db_quV9j2N86ZDXcwSX-iI36ebagkAMujHizJUiMuXRtkMNWADWAMv6udOFjxa_03NzE2YYhTmyZj1PU4bIxX-Q=s800-w800-h600" },
+        { name: "Foodhallen", lat: 52.36679, lng: 4.8679146, note: "Dinner — converted tram depot", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCcTgc0MNAoX7o7S3voQBmspfxxoB-XkISXo6CLNaZ3qRMx59Gx1wPhfa1FrwIyFrYqJsdImbZ06PvpYiVXWGa29muEte84VMQQTPxSWhwOlzM4GiI8Xjf7aVD1voPWCw5DiS28ZXSY58642JA=s800-w800-h600" }
+      ]},
+      d3: { label: "Day 3 — Van Gogh & South", stops: [
+        { name: "Van Gogh Museum", lat: 52.3580757, lng: 4.8812053, note: "Book ahead", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDXEgz4mVL7edUJE-v01VXyRbgwfYcXiPR34EoXwYVDi0YXA5oLfE24eatysAZ5vuG5zc9i5FNA2QiF249Dlr4wZyScXo5tjfsRv8s8xu-RLgphLTpBBE8H2kGIpK7YDtmnmSk6TONeNpCybw=s800-w800-h600" },
+        { name: "P.C. Hooftstraat (Louis Vuitton + luxury shopping)", lat: 52.3601946, lng: 4.8810259, note: "Standalone LV flagship, 2-3 min from Van Gogh Museum", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDNdyp_CjfLsAx4-akgzU2-4FnGmq5G7Dx_X_H5CnBZ7iTAhRPcW9LhrwxheXULewBIZ3mCUinMqrwVBRY20j-ot47rxQHNzZa_Yhn8l1iTYZ9Izc5656D2fGG3lZ1_4ZJGAx6I46-Ir2vkIQ=s800-w800-h600" },
+        { name: "Bols Cocktail Experience", lat: 52.35911, lng: 4.8812438, note: "2 min walk from Van Gogh", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjA8ypBOxty3HcCHyc3WH91Badpu_cRiIKEv-6aYsdrAesmPDcJLHnynNLre5BHA6sjokdY4K-uE7cmlvYppFEiivRvbjORIiuCFr5w2PfFTaW_ydntwUrZftE9IqsoFGRLLO-WLcZINQr46Sg=s800-w800-h600" },
+        { name: "Vondelpark", lat: 52.3579946, lng: 4.8686484, note: "Walk or rest between stops", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjB6g4g3V6WYABMBd9WgOzrTP4l7sjvobWkkUnGnWVJ0mH7KValR38eHQIZunW9hZW4dyNVHG9pS-b3vaZ05bgec5KRenjiL30sW0hkyy_glSn5gL6Gc8vRVljaXqYCgkiKDrJ0Cj5Z1BSIbCnNCStzd=s800-w800-h600" },
+        { name: "Heineken Experience", lat: 52.3578313, lng: 4.8918249, note: "Short walk south of the museums", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCaMtTM7JcMq2HsTPbrmf95PN4IizxMvzY7xdmMavIlTZky1mQVJLASdPwS3I_XXuERXTSFu3QR3k2csUJkUsKzzErVNbFgg6fXgrfLVYb4KNcmHJXYOGnsjL2aVtBTSJG9dV16MyHLAyvp57PICKYTPA=s800-w800-h600" }
+      ]}
+    }
+  },
+  utrecht: {
+    label: "Utrecht", color: "#8e7cc3",
+    days: { main: { label: "Utrecht — Miffy Half-Day", stops: [
+      { name: "Utrecht Centraal", lat: 52.0897334, lng: 5.1092145, note: "Arrival point", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDnsNIyU9v4cSfFyv5y5n9M0ggHmJXRrXee0xJN_wsRl2uujDXkdrz5PiH65jdH2RNhyDpHpM16ohNhCW2D6WAiUQjR30OK9Xfh_VOhjB2LDlCcfpXkq9t2rKPxhqIQpSV2PAG9MYfee4iHRg=s800-w800-h600" },
+      { name: "Oudegracht", lat: 52.0895354, lng: 5.120886, note: "Canal walk", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjD46dJr4jPoe3nLzNM1-sMgiB8t1xpc6PMqez01Mo6BTZA-4qd49yZa-hAAJoNfSji80MW3NnqKVWKQzt1TpADWuCRIsJsrxbanGjiTxj17P-ylKeuJ-2x4heQy8FG-M8F9ohuLgVNoIfcx9AgEFquGWA=s800-w800-h600" },
+      { name: "Nijntje Pleintje", lat: 52.0963071, lng: 5.1165144, note: "Miffy pedestrian crossing", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAUmckcX6s02dfcb1KEgYIv14iYzoj2ZAv4YSDmCpdyEtTBvI_DwNKEeux1zhxwdtZeZdw75_r4DeGLZ6ExelInGMNnglR73HlAqbeFCN2C8VNDXQ1LZoyqJ9IGkETcmeR4rLdJYJrp-jX--kc=s800-w800-h600" },
+      { name: "Nijntje Museum (Miffy Museum)", lat: 52.0838688, lng: 5.125625, note: "Book time slot in advance — closed Mondays", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjC54hIsfynPQqtuCwMiYwDbpMC5bO9pXjn6gzHCjqjzPtxTQ8koz27QQZBRVpo78dNCu-x41Jzdc683g4AfIMXYk2tE0aRDFudcz9uwcTpTfeCBCmo7xdZEN7TjWyaFXZNC9d7o7glP8Mdvon030LRfIA=s800-w800-h600" },
+      { name: "Dom Tower / Domkerk", lat: 52.0908254, lng: 5.1213254, note: "Church free; tower needs a guided tour", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBvhbUupUj4lgN1gJ1Y_Kgr0u6ovuOrmnK8Ju0TBgO9x5sgjxpvRcDMbJpBpno_M8VI3JDTOVlD37C7GMVMXH6gP_9gSD2xw-OiWmsGf-xbYyGkXQrJmhF6BU_UISkuEh88IUqghF4G37WLRrBQfQ8bKQ=s800-w800-h600" }
+    ]}}
+  },
+  ghent: {
+    label: "Ghent", color: "#3d5a80",
+    days: {
+      d1: { label: "Day 1 — Old Town Core", stops: [
+        { name: "Gravensteen Castle", lat: 51.0571769, lng: 3.7207225, note: "Medieval fortress, book ahead", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCJ2jy9b2iUWxBmxZ8vA5OMaz8laVuBJ_GjiLuIWe7arKrMzXq79AAQpI7FYxvxCKcg_Kx3dmj6zEnSgT7mILnJux59OdNAJsgDiCRDZKaENkBOB4wG4EBp_RQf1uYJYUaTJFCBe_OhV1oLew=s800-w800-h600" },
+        { name: "Graslei", lat: 51.0547683, lng: 3.72075, note: "Classic canal quay", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjA_KgsNiJ-Cy3A3_ngS2Aqevp9LACS6wc_8AZ8Q3kzP0JDfA0OORVCgi-QvDqgp8aPJZkHwaDsrVMXeizxKGaOgn68VOFGj4DZ7wfSDaeOzV8NYGv7Ep1nJiWsmH8I7GCDQ7E0-e65rSqnXAA=s800-w800-h600" },
+        { name: "St Bavo's Cathedral", lat: 51.0532335, lng: 3.726506, note: "The Ghent Altarpiece (Van Eyck)", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDq-0kUW0__-ptSVauSri6dDLIC5NNlsPGX6iHwzMQ25aTw_SNoF16nbZLRDX_2XSNoAsDh-YJASl8lISwTBLIM1L5vzlkfAP-GNIePMtaxpRm5RDilimFdFfMABbsPCk4wlq1fXDAPnmWTfQ=s800-w800-h600" },
+        { name: "Belfry of Ghent", lat: 51.0536348, lng: 3.7249126, note: "Tower, city views", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDTwUg5ZPOt2FLCOrCvsobKF_mO3pQwryNfc0LESI0bvDAY2LRIcCZ5VXgBLTz6ooztt_kKDpS3t8TC8eR41H9cM7HwiHl5Tdl962MCOf1WxvqtAaUj0Po-lBWSBK3kkak2M0i9km1T1ejNgwayUVzZ=s800-w800-h600" },
+        { name: "Patershol", lat: 51.0595702, lng: 3.7232341, note: "Historic quarter, good for dinner", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjD0sbygGvexOAUor9b9Wr7loxckRbx_Sd2UHYIwBCpbyLeQMNRtxMCVDA5T1tW5rrNLIS5BaWpTbSjkP8D9e3zmud3E7FoQQUFAr_yOGV7btKwD3rIvbkRgseFExXQydNdH4fpZhJJKj3q-sg=s800-w800-h600" }
+      ]},
+      d2: { label: "Day 2 — Food & Art", stops: [
+        { name: "Vrijdagmarkt", lat: 51.05695, lng: 3.72633, note: "Historic square, cafes around it", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDRijPxo-HU20Tx6elhe3zD_PhObKM4Y9K8Txqza0pt4p0UCKqqhnNXr2PsKajCbZEpDX1MgFmBz-s8KwgRyc2VPll1iuJmHpboEOkh334PRNdfsj-pME5uhLBfIYjrpWi07VqyxgGlYopcXw=s800-w800-h600" },
+        { name: "Dulle Griet", lat: 51.0572991, lng: 3.7241507, note: "Giant medieval cannon", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBEyYwsgqeTP3sADV79PwfMYPTLfPLt46LTbIpppsandgXjbsx4OP4rsoLvVb4AyZM5J14q63oElLbQAy0j3nEgUW_WXCua0B1eu1xw0Wn-bGiBrdfcE9H29RuNWy5ZZ0861wVJK2HF5Q=s800-w800-h600" },
+        { name: "Aux Merveilleux de Fred", lat: 51.0529215, lng: 3.7245573, note: "Pastries — originated in Lille", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjD5xRU0gYU1KpB5C4VnmvS3fHgvCC-V3KXH43YzPKxZuuxqEzY2O2MN9TKkHxvj2O3CZKOdLve9IqI4F42FBEBr6-5RWQH1URNJ5qjcSwzEr_hSwcws2yNUydhYLHApWOfbJwLhCRG9cs6DAdYUek-1HA=s800-w800-h600" },
+        { name: "MSK (Museum of Fine Arts)", lat: 51.0381661, lng: 3.7240782, note: "Bosch, Bruegel, Rubens — short bus/tram ride", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCW_vzZLQAmClaaJAAtF95jAO8VmlZ2Sp--Vlc8UYGh2W-Hu5Kp1rRoyMMLtaPwwPLQ1rTNdkHD44GHt84z2aVYpLi90Ty1o1VX09-fhYXeaz19Q1VHEtl5zsV24OmhO1LGhj7AUXkNnVEN4GGuaf6GQw=s800-w800-h600" },
+        { name: "SMAK (Contemporary Art)", lat: 51.0382211, lng: 3.7223945, note: "Right next to MSK", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDdCAUJFg-LzLtDpmjNqOom9yT6fHkFcECxsSrSi53cY3lrI79O3cLeF0xfnjv_1ty8q0hl6eIq6S4nQjeEJ0ZlmWkUvxuLPfHL9Ki63rXZHYQ_H_JPCkWiuS8C9JyicyOOzJ0SWI3nBT7Okw=s800-w800-h600" }
+      ]}
+    }
+  },
+  antwerp: {
+    label: "Antwerp + Brussels", color: "#6a994e",
+    days: {
+      antwerp: { label: "Antwerp — Station to Harbor", stops: [
+        { name: "Antwerpen-Centraal", lat: 51.21602, lng: 4.42105, note: "One of the world's most beautiful stations", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAUvdH4ypPtxPsJhReJF6L7hncFN03U2gYexd7ZzitZHue00p412bKezb4zAisFPIB9vhwAwsIqvegLJMpU7BRPJYYHN_BUM2-rKOqRwAcBoHT20hdSaSKYmbi5rncrkvxHF4d_mcDQwdcPNKk=s800-w800-h600" },
+        { name: "Grote Markt", lat: 51.22114, lng: 4.4002183, note: "Old town square", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjD6luXI9ziltniDmTvkuU_mX3frQX3aqs9vfMKzk6IzvRLo6e-y9-nU48YKhRH6gmUMlzZv8XP2ZuM9HUpyVkzaw5GccUJ0n7XWeA3LdwVm6nfmxvAnb_5HByNuQWHh6H1bWMRySx9vkiMTrw=s800-w800-h600" },
+        { name: "Cathedral of Our Lady", lat: 51.2203702, lng: 4.4015342, note: "Rubens altarpieces inside", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjB-E0xAFr3qpo5gsxicrM0eYdjgGZUdG4QSh0cWYbQS1s21cp7XGxhIDharHolEHzFFv7Aat6-l-gbwMHRJRrTUEYLAEKnRxYOv3BufmSv5cgBzNVjHQN60uFrob5ze7J1SDJIHJCKBn-r1JXWjuE0qIw=s800-w800-h600" },
+        { name: "Het Steen", lat: 51.2227238, lng: 4.3973637, note: "Oldest building, riverside fortress", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBca2t0IC5BSgyUfN8nx90N_hjwzMQsrpa3EixO_EHa4tp8PDZdxvikj8FVFCDoyIOPhxUqYqoKFXNa48gwabA_sFnBc4pAUIUxteGDbZtRrc7niRseaQKjWjfThHHIMK4ClsB-n9KyuhKTtw=s800-w800-h600" },
+        { name: "MAS (Museum aan de Stroom)", lat: 51.2289612, lng: 4.4047104, note: "Free rooftop view", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDeC96PRN_eDbN7m1ay0vMJRfERwDlMlpvluyYjLl43c8uOdVHtprb1cJh7WlXc93jy1KiUQDykuHa2c6is8xESLM2oLDtC-HRbQS7VHV1IwljKZkkGBZX9hNzBqG5v8xbdDlysjLPkthaC7g=s800-w800-h600" }
+      ]},
+      brussels: { label: "Brussels — Highlights", stops: [
+        { name: "Grand Place", lat: 50.8467887, lng: 4.3524356, note: "Photos, guild houses, best in early evening light", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDxEWb_kodn2CDtPeQGPcdzuhcWHPGgdL97Joy2ohgZRasGtUvvRnMwiIySb7rZaMLhGzYvkJktt7y1sQu9CUTwZ-Du7Ubgl0OXEc1Uf9PPphsxvfwFg6gVDG_wkbA9ULjswe_JqGlq-MjKxg=s800-w800-h600" },
+        { name: "Choco-Story Brussels", lat: 50.8453095, lng: 4.3501709, note: "Chocolate museum, tasting included, ~45-60 min", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAibXJc3LKZ8FthrvCFuIUdjARrU3yGGpz-2Qq4wa0miI9B6DOrN5y3780eiM2-VYDgk2Oo61rwvn8t_iY8qUznmxiAYpGQrSooDN0sNBoYsPsoFbw2wFfgrP-EeqLdwsw-KSrXBO-zXTqk4oc=s800-w800-h600" },
+        { name: "Manneken Pis", lat: 50.844993, lng: 4.349989, note: "Quick 3-5 min stop", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDYRK6e-YyG1m7nvFVV5GRJlVFx749nVitf9z6YSmcCVOcYUQHdY6c9LB1089NV7kS_Kw_pLG4RU_He9X4kyhjRviTgIQHVIZhpjyjgCToS7ZBUV_st6RvlTg3T2M6AqWzoOqvSAecOOH88N0K11RJQ=s800-w800-h600" },
+        { name: "Royal Palace of Brussels", lat: 50.8420026, lng: 4.3623406, note: "Exterior/facade — interior only open a few weeks in summer", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjB7SjfbXuzeXBYdjCVM5IiHPtQcDN_7zJqzZcslfPbcT8B_9Lzdoo1MHUJFbnPnrlWunqBCxv8bbHBnXNdO4UcxUHdiuzDFDf6srEhrM_zC1yfx82c3vRSA6dvqqGHeIzas8AphFZy0UUjjAns=s800-w800-h600" }
+      ]}
+    }
+  },
+  bruges: {
+    label: "Bruges", color: "#c9a227",
+    days: { main: { label: "Bruges — Relaxed Day", stops: [
+      { name: "Markt", lat: 51.208619, lng: 3.223992, note: "Sit, coffee, Belfry view from below", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjA0pud8BmSe5QR25wqKiQcFTXdWwWoC1Mek5z6N4vp__C3FBwIySaziGN16lPTghqUm4wlQKDm9jumMZpylCOGKvcvPBdQCttpGP178Z2XiIVFbI1Kx_EcmLcx1-8UOp-5Q06aQDNIe62-s62s=s800-w800-h600" },
+      { name: "Burg Square", lat: 51.2085062, lng: 3.2268383, note: "A minute from Markt", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCgLRQHWlGlMTOxbqQRmojFX6BcNldsN7wkZMMZHaXdZQ-UcpGuzlcbNjzCnFNeu0vDlt7uhy_RYEdgFLRzL4xIhZ2lOG8Su9a9S6zqAbATQgTObJ_hXOsdOr5oDhNw0m938aeLxHek-wgzE8A=s800-w800-h600" },
+      { name: "Rozenhoedkaai", lat: 51.207137, lng: 3.2275063, note: "The classic canal-corner photo", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDd3-U3zYiwk4wAX0rXtOPEjP3KMWGKwtFZ3Se4dglvlL7MTrNyPJnrzDQg7jSMaDICuzMmXcwSehuZjF_BlzgRIL9_DlNcjlBP3ujJJ1KQevHLlF_I40O6dl-jD5icUnG9g-B0c6WRke2dDg=s800-w800-h600" },
+      { name: "Begijnhof", lat: 51.2012811, lng: 3.2230458, note: "Quiet, green, calm", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBfkH7pXGLHzeJrplnhYNSRaDR1LQWig6Mqs3IZxtTnLEmyxDOewbuBGaUDapZZ7E5ctvlTBEzp06KO9IaNf3iQxpVxcttQ-JTfpSl02rD6Hvlx3FemauAZEAeY9UP9hK2t1Ps6OBNEBLURRMw=s800-w800-h600" },
+      { name: "Minnewater (Lake of Love)", lat: 51.2000104, lng: 3.2247317, note: "Sit on a bench here", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCCaV-yAoYZRXXCENZtoGVROHxCY9BaTeKMuvcmbg9yzwzSE0RQGle_YDXVldD0qnQbRVzfBGUaIGzgZ8AizXC_avEKmL-4-ProFTV8EpfTyYXYBV-83JO1RgP64eV4jls3nIKJdNWuFhWrNg=s800-w800-h600" }
+    ]}}
+  },
+  lille: {
+    label: "Lille", color: "#a44a3f",
+    days: { main: { label: "Lille — Citadelle, Market & Old Town", stops: [
+      { name: "Citadelle de Lille", lat: 50.6409299, lng: 3.0445812, note: "Exterior/ramparts only — active military site", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjDo_i5WeEidZu3nkC1JmWqxD-pesfP41RIQrVGEoV6ZFoYs_U2rAkWk4Qw8nkH3HkxT_fyCG1KXO3MJyO4kGESr0At_sLz2jnwnL28sTnZD2sgR94iZ9AbPUxuRPYPr6_keQlt_XsbMs1MdcsA=s800-w800-h600" },
+      { name: "Marché de Wazemmes", lat: 50.6260664, lng: 3.0498295, note: "Sunday market — ready-to-eat stalls", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCBrMb86TGmwY8KQROhM_3JmrKN3nmSbPE0B4DbIuXtfb3gVcu6f1n3IBd9FTMAy6iyMc6zCDzpuMpGDq9HHnWFcHRu6b4vHlE8qF-Krg-uIo7SGK4E1xStuj9XJggzQseXdLq9BqCBIPsu=s800-w800-h600" },
+      { name: "La Vieille Bourse", lat: 50.6370175, lng: 3.0642923, note: "Sunday book & flower market in courtyard", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAf1PZJ8ntj1TkExPpZFzkdoWql8NmiMvhYNG9lkYKIGl_qzX3Eel9k4Pa2GOVdelhRxEs7tjOCmmjH6vfjgmJuDJIQ8HzpscChCtZTOzCMHG0ZUwyscjTjOAsIajSf3YYr0k9zJn-YBwyeibg=s800-w800-h600" },
+      { name: "Place du Général de Gaulle", lat: 50.6370193, lng: 3.0636696, note: "Grand Place", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBmkF-Qe90l91P_YsgtdMiQphNRR4_v5tbmJOHhh0SOHjvJ8moDRczxz495ASFU45trIQdSC1clXfnXwIP1wAVRjDZQ95g-Bm9hR1p7QvEtTl3QPcZbX4zZBqhhKPe_jqK9k2cbrHMwM8AXZg=s800-w800-h600" },
+      { name: "Pulpe", lat: 50.6431525, lng: 3.0594134, note: "Michelin-recognized bistro — book ahead, closed Mon-Wed", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCZE9yWV7Q4ruPsvKh_3BV-mkqyp3tIJyaVEgCMjxhOjndNAG6UjyN7Nl1hzKusL1VvfT0AAN8NVh-1tdbSACly-uJZ1_UeMjsm54MBE0euWqSRpo5hj5FivQCmJg_CFgMv787QwZGh5tP3JUtl8LR9GA=s800-w800-h600" }
+    ]}}
+  }
+};
+
+const map = L.map('map', { scrollWheelZoom: true }).setView([51.6, 4.2], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+}).addTo(map);
+
+let currentMarkerLayer = null;
+let activeCity = null;
+
+function createPhotoIcon(color, num, photoUrl) {
+  return L.divIcon({
+    className: 'custom-photo-icon',
+    html: `<div class="photo-pin">
+             <div class="pin-photo" style="background-image:url('${photoUrl}');border-color:${color};"></div>
+             <div class="pin-badge" style="background:${color};">${num}</div>
+           </div>`,
+    iconSize: [50, 50], iconAnchor: [25, 50], popupAnchor: [0, -50]
+  });
+}
+
+function buildCityTabs() {
+  const container = document.getElementById('cityTabs');
+  container.innerHTML = '';
+  Object.keys(cities).forEach(cityKey => {
+    const city = cities[cityKey];
+    const tab = document.createElement('div');
+    tab.className = 'tab'; tab.textContent = city.label;
+    tab.onclick = () => selectCity(cityKey);
+    tab.dataset.city = cityKey;
+    container.appendChild(tab);
+  });
+}
+
+function buildDayTabs(cityKey) {
+  const container = document.getElementById('dayTabs');
+  container.innerHTML = '';
+  const city = cities[cityKey];
+  const dayKeys = Object.keys(city.days);
+  if (dayKeys.length <= 1) { container.style.display = 'none'; return; }
+  container.style.display = 'flex';
+  dayKeys.forEach(dayKey => {
+    const tab = document.createElement('div');
+    tab.className = 'tab'; tab.textContent = city.days[dayKey].label;
+    tab.onclick = () => selectDay(cityKey, dayKey);
+    tab.dataset.day = dayKey;
+    container.appendChild(tab);
+  });
+}
+
+function selectCity(cityKey) {
+  const firstDay = Object.keys(cities[cityKey].days)[0];
+  document.querySelectorAll('#cityTabs .tab').forEach(t => {
+    const isActive = t.dataset.city === cityKey;
+    t.classList.toggle('active', isActive);
+    t.style.background = isActive ? cities[cityKey].color : '';
+    t.style.borderColor = isActive ? cities[cityKey].color : '';
+  });
+  buildDayTabs(cityKey);
+  selectDay(cityKey, firstDay);
+}
+
+function selectDay(cityKey, dayKey) {
+  const city = cities[cityKey];
+  document.querySelectorAll('#dayTabs .tab').forEach(t => {
+    const isActive = t.dataset.day === dayKey;
+    t.classList.toggle('active', isActive);
+    t.style.background = isActive ? city.color : '';
+    t.style.borderColor = isActive ? city.color : '';
+  });
+
+  if (currentMarkerLayer) map.removeLayer(currentMarkerLayer);
+
+  const day = city.days[dayKey];
+  const markers = [];
+  const latlngs = [];
+
+  day.stops.forEach((stop, i) => {
+    const marker = L.marker([stop.lat, stop.lng], { icon: createPhotoIcon(city.color, i + 1, stop.photo) });
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`;
+    marker.bindPopup(`
+      <img class="popup-photo" src="${stop.photo}" alt="${stop.name}" />
+      <div class="popup-body">
+        <div class="popup-title">${stop.name}</div>
+        <div class="popup-note">${stop.note}</div>
+        <a class="popup-link" href="${mapsUrl}" target="_blank">Open in Google Maps →</a>
+      </div>`, { minWidth: 200 });
+    markers.push(marker);
+    latlngs.push([stop.lat, stop.lng]);
+  });
+
+  currentMarkerLayer = L.layerGroup(markers).addTo(map);
+  if (latlngs.length) map.fitBounds(latlngs, { padding: [40, 40] });
+
+  renderStopList(cityKey, dayKey);
+}
+
+function renderStopList(cityKey, dayKey) {
+  const container = document.getElementById('stoplist');
+  container.innerHTML = '';
+  const city = cities[cityKey];
+  const day = city.days[dayKey];
+
+  const block = document.createElement('div');
+  block.innerHTML = `<div class="day-title" style="border-color:${city.color}">${city.label} — ${day.label}</div>`;
+
+  day.stops.forEach((stop, i) => {
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${stop.lat},${stop.lng}`;
+    const card = document.createElement('div');
+    card.className = 'stop-card';
+    card.innerHTML = `
+      <div class="stop-thumb" style="background-image:url('${stop.photo}')">
+        <div class="stop-num" style="background:${city.color}">${i + 1}</div>
+      </div>
+      <div class="stop-info">
+        <div class="stop-name">${stop.name}</div>
+        <div class="stop-note">${stop.note}</div>
+        <a class="stop-link" href="${mapsUrl}" target="_blank">Open in Google Maps →</a>
+      </div>`;
+    card.onclick = (e) => {
+      if (e.target.tagName === 'A') return;
+      map.setView([stop.lat, stop.lng], 16);
+      currentMarkerLayer.eachLayer(m => {
+        const ll = m.getLatLng();
+        if (ll.lat === stop.lat && ll.lng === stop.lng) m.openPopup();
+      });
+    };
+    block.appendChild(card);
+  });
+  container.appendChild(block);
+}
+
+buildCityTabs();
+selectCity('amsterdam');
+</script>
+
+</body>
+</html>
