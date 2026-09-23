@@ -101,6 +101,10 @@
 const cities = {
   amsterdam: {
     label: "Amsterdam", color: "#e07a5f",
+    hotels: [
+      { name: "Conscious Hotel The Tire Station", lat: 52.357281699999994, lng: 4.8553934, note: "Sep 24-27 (3 nights)", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjArI5arI0beDtNdkpzOYF7B0DLGqoUobTLCRqGfbSZO6HY39sqmOm3gdqgFNxDxPcIz2mW5E-UVoOrdxYKZBEvLIbu_Txzfbo7b0POnIKSWt3snLthxlg2ihNB_CmERHSq3iKnlJ0_TlncEEQ=s800-w800-h600" },
+      { name: "MEININGER Hotel Amsterdam Amstel", lat: 52.3457763, lng: 4.9192528, note: "Sep 27-29 (2 nights)", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjBpFuJVGhC0kNo4m_XmA2fh7zzFP1Ea1PJtKfc0PMwmQXuXuoPWYPlfMWTYVbvTTOnwWJD71415L8IegfYc8BASxDEevG5jyeT8xLCLKhTfE0sTJurKJpyqZupfx849r3Fitv-0lI1oJc8P=s800-w800-h600" }
+    ],
     days: {
       d1: { label: "Day 1 — Old Center", stops: [
         { name: "De Wallen (Red Light District)", lat: 52.3718122, lng: 4.8960596, note: "Start here, before the day heats up", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjASyvFEJMuzm2tOqBh9kCA4ZKbJuO7LxaJoJsnfbUCu_5L1H2FtjzpfTO82biaCnfZL7bnaV7c3oKBQMtaXW3E8o6HMPXW6fzIR9O7ls_g0mqmvg_L_RmUwe3AhbjwHMvJEv5btaoXgla_W3LU=s4800-w800-h600" },
@@ -139,6 +143,9 @@ const cities = {
   },
   ghent: {
     label: "Ghent", color: "#3d5a80",
+    hotels: [
+      { name: "Ganzendries 140 (Airbnb)", lat: 51.032961799999995, lng: 3.7116851, note: "Sep 29 - Oct 4 (5 nights)", photo: null }
+    ],
     days: {
       d1: { label: "Day 1 — Old Town Core", stops: [
         { name: "Gravensteen Castle", lat: 51.0571769, lng: 3.7207225, note: "Medieval fortress, book ahead", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAeLaJ_qp9UkplCnl2T6cmDl_9o40Jb-Q-9HH68D3Leqcf9Z16BlZs8utlwvoxZE36GZA1iuzdsNfEP6aJqnsrP8oumq9Nc_JU6CvNicuSG6ZlxR9760AI0osmLuv0ImxWBXcLys5rLcfgVJQ=s4800-w800-h600" },
@@ -196,6 +203,9 @@ const cities = {
   },
   hague: {
     label: "The Hague", color: "#4a7c8c",
+    hotels: [
+      { name: "ibis Styles Delft City Centre", lat: 52.0061871, lng: 4.3568682, note: "Oct 4-8 (4 nights)", photo: "https://lh3.googleusercontent.com/grass-cs/ACvplmOm6xq3760eDol20IjTbmXGO3HL3OB5P17IVSvfQDKd3UzDJJhj8nko3jBAt6vyZ684ZVC8ABUT908CY0FxmxuLfa5KuEB-AAdiwgmPXCEeqW35XHfuxD8hNO5_lrFnZllWqNk=s800-w800-h600" }
+    ],
     days: {
       d1: { label: "Day 1 — City Center", stops: [
         { name: "The Passage", lat: 52.0780851, lng: 4.3114304, note: "Historic covered shopping arcade", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCgWsaAXOOBwP6ZrMoI75NpIGPNELVOmDljxynlZ8jm3M77d98j8bu0YKZyHe3-6FOJtTuCw4eQzz_16lsw15nukFZtEMsUfj_R22FU4Sh7rSwPgWm8MPvSyqaB01uq2c7QZ69U7Omrymqm=s4800-w800-h600" },
@@ -211,6 +221,9 @@ const cities = {
   },
   rotterdam: {
     label: "Kinderdijk + Rotterdam", color: "#d68c45",
+    hotels: [
+      { name: "ibis Styles Delft City Centre", lat: 52.0061871, lng: 4.3568682, note: "Oct 4-8 (4 nights) \u2014 base for this day too", photo: "https://lh3.googleusercontent.com/grass-cs/ACvplmOm6xq3760eDol20IjTbmXGO3HL3OB5P17IVSvfQDKd3UzDJJhj8nko3jBAt6vyZ684ZVC8ABUT908CY0FxmxuLfa5KuEB-AAdiwgmPXCEeqW35XHfuxD8hNO5_lrFnZllWqNk=s800-w800-h600" }
+    ],
     days: { main: { label: "Windmills & Modern Rotterdam", stops: [
       { name: "Kinderdijk", lat: 51.8877407, lng: 4.6380074, note: "UNESCO windmills, waterbus from Rotterdam ~30 min", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjCqoFbmvigiza-LjkQneWH1I_jZLL6c0aTTqNro1LhbEbRLa-612z8Os-ivq_KP9m89Be1V6MfIzDwmGePMrA4yjfh2jHCIydlSbW4HC2dpBhAfWOFH48D5qdDOlINtUlC4b_-WacRduh_9sQ=s4800-w800-h600" },
         { name: "Cube Houses", lat: 51.9201875, lng: 4.4905747, note: "Piet Blom's tilted houses, walk-through museum house", photo: "https://lh3.googleusercontent.com/place-photos/AG9NLjAgHmCjtdJQZvyFlXg3k_5q0kx0mDGdBxGwPAxd2w19Jr1iHEZfMuI8r-AL9g1GEJV1vW6xpYx5A9eerJfCQEE9PFIRierb0-S8wKOnInrC0MR3uNDU9ITYaRHK0u95QRGiIOZ0VsfywlD6X-E=s4800-w800-h600" },
@@ -220,12 +233,23 @@ const cities = {
 };
 
 const map = L.map('map', { scrollWheelZoom: true }).setView([51.6, 4.2], 7);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19
 }).addTo(map);
 
 let currentMarkerLayer = null;
+let currentHotelLayer = null;
 let activeCity = null;
+
+function createHotelIcon(color) {
+  return L.divIcon({
+    className: 'custom-hotel-icon',
+    html: `<div style="background:${color};width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,0.4);border:3px solid white;font-size:16px;">🛏️</div>`,
+    iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -34]
+  });
+}
 
 function createPhotoIcon(color, num, photoUrl) {
   return L.divIcon({
@@ -289,6 +313,7 @@ function selectDay(cityKey, dayKey) {
   });
 
   if (currentMarkerLayer) map.removeLayer(currentMarkerLayer);
+  if (currentHotelLayer) map.removeLayer(currentHotelLayer);
 
   const day = city.days[dayKey];
   const markers = [];
@@ -308,7 +333,24 @@ function selectDay(cityKey, dayKey) {
     latlngs.push([stop.lat, stop.lng]);
   });
 
+  const hotelMarkers = [];
+  (city.hotels || []).forEach(hotel => {
+    const marker = L.marker([hotel.lat, hotel.lng], { icon: createHotelIcon(city.color) });
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${hotel.lat},${hotel.lng}`;
+    const photoHtml = hotel.photo ? `<img class="popup-photo" src="${hotel.photo}" alt="${hotel.name}" />` : '';
+    marker.bindPopup(`
+      ${photoHtml}
+      <div class="popup-body">
+        <div class="popup-title">🛏️ ${hotel.name}</div>
+        <div class="popup-note">${hotel.note}</div>
+        <a class="popup-link" href="${mapsUrl}" target="_blank">Open in Google Maps →</a>
+      </div>`, { minWidth: 200 });
+    hotelMarkers.push(marker);
+    latlngs.push([hotel.lat, hotel.lng]);
+  });
+
   currentMarkerLayer = L.layerGroup(markers).addTo(map);
+  currentHotelLayer = L.layerGroup(hotelMarkers).addTo(map);
   if (latlngs.length) map.fitBounds(latlngs, { padding: [40, 40] });
 
   renderStopList(cityKey, dayKey);
